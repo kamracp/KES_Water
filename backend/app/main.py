@@ -1,10 +1,14 @@
 from fastapi import FastAPI
 
+from app.api.routes.water_balance import router as water_balance_router
+
 app = FastAPI(
     title="Kamra Water OS",
     description="AI Powered Industrial Water, Wastewater and Utility Management Platform",
     version="0.1.0",
 )
+
+app.include_router(water_balance_router)
 
 
 @app.get("/")
