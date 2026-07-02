@@ -19,31 +19,37 @@ class PumpSelectionResult(BaseModel):
 
 
 STANDARD_MOTORS_KW = [
-    0.37, 0.55, 0.75, 1.1, 1.5, 2.2, 3.7, 5.5, 7.5, 11,
-    15, 18.5, 22, 30, 37, 45, 55, 75, 90, 110, 132, 160, 200
+    0.37, 0.55, 0.75, 1.10, 1.50,
+    2.20, 3.70, 5.50, 7.50, 11,
+    15, 18.50, 22, 30, 37,
+    45, 55, 75, 90, 110,
+    132, 160, 200
 ]
 
 
 def select_standard_motor(required_kw: float) -> float:
-    for motor_kw in STANDARD_MOTORS_KW:
-        if motor_kw >= required_kw:
-            return motor_kw
+    for motor in STANDARD_MOTORS_KW:
+        if motor >= required_kw:
+            return motor
     return STANDARD_MOTORS_KW[-1]
 
 
 def calculate_pump_selection(data: PumpSelectionInput) -> PumpSelectionResult:
     flow_lps = data.flow_m3_hr / 3.6
 
-    hydraulic_power_kw = (1000 * 9.81 * flow_lps / 1000 * data.total_head_m) / 1000
+    hydraulic_power_kw = (
+        1000 * 9.81 * (flow_lps / 1000) * data.total_head_m
+    ) / 1000
 
     pump_eff = data.pump_efficiency_percent / 100
     motor_eff = data.motor_efficiency_percent / 100
 
-    shaft_power_kw = hydraulic_power_kw / pump_eff if pump_eff else 0
-    motor_input_power_kw = shaft_power_kw / motor_eff if motor_eff else 0
+    shaft_power_kw = hydraulic_power_kw / pump_eff
+    motor_input_power_kw = shaft_power_kw / motor_eff
 
-    required_motor_kw = shaft_power_kw * data.service_factor
-    recommended_motor_kw = select_standard_motor(required_motor_kw)
+    recommended_motor = select_standard_motor(
+        shaft_power_kw * data.service_factor
+    )
 
     if data.total_head_m <= 30:
         category = "Low Head Pump"
@@ -57,6 +63,6 @@ def calculate_pump_selection(data: PumpSelectionInput) -> PumpSelectionResult:
         hydraulic_power_kw=round(hydraulic_power_kw, 2),
         shaft_power_kw=round(shaft_power_kw, 2),
         motor_input_power_kw=round(motor_input_power_kw, 2),
-        recommended_motor_kw=recommended_motor_kw,
+        recommended_motor_kw=recommended_motor,
         pump_category=category,
     )
