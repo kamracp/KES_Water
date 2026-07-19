@@ -1,39 +1,57 @@
-from fastapi import FastAPI
+"""
+KES Water
+Application Entry Point
+"""
 
-from app.api.routes.water_balance import router as water_balance_router
-from app.api.routes.pump_selection import router as pump_selection_router
-from app.api.routes.pipeline_design import router as pipeline_design_router
-from app.api.routes.tank_design import router as tank_design_router
-from app.api.routes.pump_head import router as pump_head_router
-from app.api.routes.friction_loss import router as friction_loss_router
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.api.router import api_router
+from app.core.config import settings
+from app.core.logging import get_logger
+from app.exceptions.handlers import register_exception_handlers
+
+logger = get_logger()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("Starting KES Water API...")
+    yield
+    logger.info("Stopping KES Water API...")
+
 
 app = FastAPI(
-    title="Kamra Water OS",
-    description="AI Powered Industrial Water, Wastewater & Utility Management Platform",
-    version="0.5.0",
+    title=settings.APP_NAME,
+    version=settings.APP_VERSION,
+    description=settings.APP_DESCRIPTION,
+    lifespan=lifespan,
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
 
-app.include_router(water_balance_router)
-app.include_router(pump_selection_router)
-app.include_router(pipeline_design_router)
-app.include_router(tank_design_router)
-app.include_router(pump_head_router)
-app.include_router(friction_loss_router)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.BACKEND_CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+register_exception_handlers(app)
+
+app.include_router(
+    api_router,
+    prefix=settings.API_V1_PREFIX,
+)
 
 
-@app.get("/")
-def root():
+@app.get("/", tags=["Root"])
+async def root():
     return {
-        "application": "Kamra Water OS",
+        "application": settings.APP_NAME,
+        "version": settings.APP_VERSION,
         "status": "running",
-        "version": "0.5.0",
-        "product_model": "Engineering Operating System for Water Management",
-    }
-
-
-@app.get("/health")
-def health():
-    return {
-        "status": "healthy",
-        "service": "Kamra Water OS Backend",
     }
