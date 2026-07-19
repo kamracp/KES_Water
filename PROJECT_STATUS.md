@@ -116,6 +116,7 @@ Retained record:
 - Zone Code: MOH-WAZ-01
 - Zone Name: KES Mohali Main Water Accounting Zone
 - Zone Type: PRODUCTION
+- Audit Tolerance: 5%
 
 Temporary CRUD record:
 
@@ -124,6 +125,118 @@ Temporary CRUD record:
 - Delete returned HTTP 204
 - Subsequent GET returned HTTP 404
 - Temporary record successfully removed
+
+### Enterprise Water Balance V2
+
+Mission: `KESW-S3-M1`
+
+Status: Complete and verified
+
+Completed components:
+
+- Decimal-based engineering domain engine
+- Enterprise request and response schemas
+- Water Accounting Zone-aware service layer
+- Versioned engineering API
+- Router registration
+- Domain validation
+- Service validation
+- API exception mapping
+- Automated engine tests
+- Automated schema tests
+- Automated service tests
+- Automated API tests
+- Development test dependencies
+
+Registered endpoint:
+
+- `POST /api/v1/engineering/water-balance/calculate`
+
+Boundary inflow:
+
+- External fresh water
+- External reclaimed water
+- Inter-zone inflow
+
+Boundary outflow:
+
+- Wastewater discharge
+- Inter-zone outflow
+- Evaporation
+- Product incorporation
+- Other consumptive use
+
+Storage accounting:
+
+- Net storage change equals closing storage minus opening storage
+
+Balance equation:
+
+- Signed balance error equals boundary inflow minus boundary outflow minus net storage change
+
+Internal reuse treatment:
+
+- Internal reuse is excluded from boundary inflow
+- Internal reuse is used for gross demand and circularity KPIs
+
+Calculated results:
+
+- Total external inflow
+- Total boundary inflow
+- Total consumptive use
+- Total boundary outflow
+- Net storage change
+- Signed balance error
+- Absolute balance error
+- Balance error percentage
+- Balance closure percentage
+- Unaccounted water
+- Over-accounted water
+- Gross water demand
+- Internal reuse percentage
+- Applied audit tolerance
+- Water balance status
+
+Supported statuses:
+
+- BALANCED
+- IMBALANCED
+- NO_FLOW
+- INDETERMINATE
+
+Validation rules:
+
+- Inputs must be valid numeric values
+- Boolean values are rejected
+- Inputs must be finite
+- Volume inputs must be non-negative
+- Audit tolerance must be between 0% and 100%
+- Water Accounting Zone ownership is validated
+- Water Accounting Zone audit tolerance is applied
+
+Live API validation:
+
+- HTTP status: 200
+- Total boundary inflow: 120 m3
+- Total boundary outflow: 100 m3
+- Net storage change: 20 m3
+- Signed balance error: 0 m3
+- Balance closure: 100%
+- Internal reuse: 25%
+- Applied audit tolerance: 5%
+- Status: BALANCED
+
+Automated validation:
+
+- Engine tests: 27 passed
+- Schema tests: 18 passed
+- Service tests: 13 passed
+- API tests: 7 passed
+- Combined result: 65 passed
+- Statements: 224
+- Missed statements: 0
+- Coverage: 100%
+- Python compile validation: Passed
 
 ## Database Status
 
@@ -134,6 +247,8 @@ Tables:
 - organizations
 - plants
 - water_accounting_zones
+
+No new database migration was required for Enterprise Water Balance V2.
 
 ## API Status
 
@@ -154,9 +269,17 @@ Water Accounting Zone API:
 - DELETE passed
 - Filter by Organization and Plant passed
 
+Enterprise Water Balance API:
+
+- POST calculation passed
+- Water Accounting Zone integration passed
+- Configurable audit tolerance passed
+- Domain error handling passed
+- Automated API tests passed
+
 ## Retained Engineering Calculators
 
-Current retained modules:
+Current retained legacy modules:
 
 - Water Balance
 - Pump Selection
@@ -165,6 +288,11 @@ Current retained modules:
 - Pump Head
 - Friction Loss
 
+Legacy Water Balance files remain unchanged:
+
+- `backend/app/engineering_core/water_balance/calculator.py`
+- `backend/app/api/routes/water_balance.py`
+
 Additional review item:
 
 - Friction-loss logic exists in more than one legacy location
@@ -172,7 +300,11 @@ Additional review item:
 
 ## Engineering Modernization Status
 
-Pending process for every calculator:
+Enterprise modernization completed:
+
+- Water Balance V2
+
+Pending process for remaining calculators:
 
 - Formula extraction
 - Physics review
@@ -202,20 +334,24 @@ Pending process for every calculator:
 - Python caches ignored
 - Logs ignored
 - `.env.example` contains placeholders
-- Empty documentation files are being completed before commit
-- Git commit and push pending final staged review
+- Enterprise backup retained
+- Backup deletion not authorized
+- Pre-commit tests completed
+- Coverage validation completed
+- Compile validation completed
+- Final staged review required before publication
 
-## Next Planned Mission
+## Proposed Next Mission
 
-`KESW-S3-M1 — Water Balance Engineering Domain Review`
+`KESW-S3-M2 — Water Balance Calculation Persistence and Audit Trail`
 
-Planned activities:
+Proposed activities:
 
-1. Inventory retained Water Balance files.
-2. Extract and compare formulas.
-3. Verify mass-balance physics.
-4. Define units and assumptions.
-5. Create regression test cases.
-6. Design the enterprise calculation schema.
-7. Integrate Organization, Plant, and Water Accounting Zone.
-8. Expose the calculation under `/api/v1/engineering/water-balance/`.
+1. Define calculation-run database model.
+2. Store input and result snapshots.
+3. Record Organization, Plant, and Water Accounting Zone ownership.
+4. Record calculation-engine version.
+5. Add calculation history endpoints.
+6. Add calculation retrieval and filtering.
+7. Add persistence service tests.
+8. Add API integration tests.

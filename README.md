@@ -35,6 +35,15 @@ Completed enterprise modules:
 - Organization CRUD
 - Plant CRUD
 - Water Accounting Zone CRUD
+- Enterprise Water Balance V2
+
+Current Water Balance validation:
+
+- 65 automated tests passed
+- 224 of 224 statements covered
+- 100% targeted coverage
+- Python compile validation passed
+- Live API calculation passed
 
 ## Retained Enterprise Data
 
@@ -47,6 +56,7 @@ Completed enterprise modules:
 - Water Accounting Zone ID: 1
 - Zone Code: MOH-WAZ-01
 - Zone Name: KES Mohali Main Water Accounting Zone
+- Zone Audit Tolerance: 5%
 
 ## Water Accounting Zone
 
@@ -64,9 +74,50 @@ The Water Accounting Zone module supports:
 
 Current Alembic migration head: `67f3d7e90039`
 
-## Retained Engineering Calculators
+## Enterprise Water Balance V2
 
-The following legacy calculators are preserved:
+Mission `KESW-S3-M1` delivered a Decimal-based enterprise Water Balance engine.
+
+Registered endpoint:
+
+- `POST /api/v1/engineering/water-balance/calculate`
+
+Boundary inflow includes:
+
+- External fresh water
+- External reclaimed water
+- Inter-zone inflow
+
+Boundary outflow includes:
+
+- Wastewater discharge
+- Inter-zone outflow
+- Evaporation
+- Product incorporation
+- Other consumptive use
+
+Net storage change is calculated as closing storage minus opening storage.
+
+Signed balance error is calculated as boundary inflow minus boundary outflow minus net storage change.
+
+Internal reuse is excluded from boundary inflow and is used for gross demand and circularity KPIs.
+
+Supported statuses:
+
+- BALANCED
+- IMBALANCED
+- NO_FLOW
+- INDETERMINATE
+
+The service validates Organization, Plant, and Water Accounting Zone ownership and applies the configured Water Accounting Zone audit tolerance.
+
+## Engineering Calculators
+
+Modernized enterprise calculator:
+
+- Water Balance V2
+
+Preserved legacy calculators:
 
 - Water Balance
 - Pump Selection
@@ -75,7 +126,9 @@ The following legacy calculators are preserved:
 - Pump Head
 - Friction Loss
 
-Each calculator will be reviewed, validated, unit-tested, refactored into a domain engine, integrated with Organization, Plant, and Water Accounting Zone, and exposed under `/api/v1/engineering/`.
+The legacy Water Balance calculator and dormant legacy route remain unchanged for traceability.
+
+The remaining calculators will be reviewed, validated, unit-tested, refactored into domain engines, integrated with Organization, Plant, and Water Accounting Zone, and exposed under `/api/v1/engineering/`.
 
 ## Technology Stack
 
@@ -89,6 +142,11 @@ Backend:
 - Pydantic v2
 - Loguru
 - Uvicorn
+
+Development testing:
+
+- pytest
+- pytest-cov
 
 Planned frontend:
 
@@ -105,9 +163,11 @@ Planned frontend:
 
 Project root: `/home/chander/projects/KES_Water`
 
-Start the backend:
+Backend directory:
 
-`cd /home/chander/projects/KES_Water/backend`
+`/home/chander/projects/KES_Water/backend`
+
+Start the backend:
 
 `../.venv/bin/uvicorn app.main:app --reload --host 127.0.0.1 --port 8010`
 
@@ -115,12 +175,21 @@ API documentation:
 
 http://127.0.0.1:8010/docs
 
+Install development dependencies from the backend directory:
+
+`../.venv/bin/pip install -r requirements-dev.txt`
+
+Run the Enterprise Water Balance test suite:
+
+`../.venv/bin/python -m pytest tests/engineering_core/water_balance/test_engine.py tests/schemas/test_water_balance.py tests/services/test_water_balance_service.py tests/api/test_engineering_water_balance.py -q`
+
 ## Core API Modules
 
 - `/api/v1/health`
 - `/api/v1/organizations/`
 - `/api/v1/plants/`
 - `/api/v1/water-accounting-zones/`
+- `POST /api/v1/engineering/water-balance/calculate`
 
 ## Security
 
